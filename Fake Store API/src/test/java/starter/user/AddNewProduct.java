@@ -1,0 +1,52 @@
+package starter.user;
+
+import net.serenitybdd.rest.SerenityRest;
+import net.thucydides.core.annotations.Step;
+import org.json.JSONObject;
+import starter.utils.GenerateToken;
+import starter.utils.JsonSchema;
+import starter.utils.JsonSchemaHelper;
+
+import static io.restassured.module.jsv.JsonSchemaValidator.matchesJsonSchema;
+import static net.serenitybdd.rest.SerenityRest.restAssuredThat;
+import static org.hamcrest.Matchers.equalTo;
+
+public class AddNewProduct {
+    private static String url = "https://fakestoreapi.com";
+
+    @Step("I set API endpoint for add new product")
+    public String setApiEndpoint() {
+        return url + "/products";
+    }
+
+    @Step("I send request to add new product with valid inputs")
+    public void sendAddnewProductRequest() {
+        JSONObject requestBody = new JSONObject();
+
+        requestBody.put("id", 21);
+        requestBody.put("title", "test product");
+        requestBody.put("price",13.5F);
+        requestBody.put("description","lorem ipsum set");
+        requestBody.put("image", "https://i.pravatar.cc");
+        requestBody.put("category", "electronic");
+
+        SerenityRest.given()
+                .header("Content-Type", "application/json")
+                .body(requestBody.toString())
+                .post(setApiEndpoint());
+    }
+
+    @Step("I receive valid data for add new product")
+    public void receiveValidAddnewProduct() {
+        JsonSchemaHelper helper = new JsonSchemaHelper();
+        String schema = helper.getResponseSchema(JsonSchema.ADD_NEW_PRODUCT_SCHEMA);
+
+        restAssuredThat(response -> response.body("'id'", equalTo(21)));
+        restAssuredThat(response -> response.body("'title'", equalTo("test product")));
+        restAssuredThat(response -> response.body("'price'", equalTo(13.5F)));
+        restAssuredThat(response -> response.body("'category'", equalTo("electronic")));
+        restAssuredThat(response -> response.body("'description'", equalTo("lorem ipsum set")));
+        restAssuredThat(response -> response.body("'image'", equalTo("https://i.pravatar.cc")));
+        restAssuredThat(response -> response.body(matchesJsonSchema(schema)));
+    }
+}
